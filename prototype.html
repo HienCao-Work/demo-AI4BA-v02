@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FocusFlow — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+/* ═══════════════════════════════════════
+   APP TOKENS
+═══════════════════════════════════════ */
+:root {
+  --brand-primary: #6C5CE7;
+  --brand-secondary: #00CEC9;
+  --success: #00B894;
+  --warning: #FDCB6E;
+  --danger: #D63031;
+  --orange: #E17055;
+  --bg: #F7F7FB;
+  --card: #FFFFFF;
+  --border: #E5E7EB;
+  --foreground: #111827;
+  --muted: #6B7280;
+  --muted-bg: #F3F4F6;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ═══════════════════════════════════════
+   LOGIN VIEW — phone shell
+═══════════════════════════════════════ */
+#login-view {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #E9ECEF;
+  padding: 24px 16px;
+}
+.phone {
+  width: 375px;
+  min-height: 812px;
+  background: #fff;
+  border-radius: 40px;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.18);
+  overflow: hidden;
+  position: relative;
+}
+
+/* Screen system */
+.screen { display: none; width: 375px; min-height: 812px; flex-direction: column; background: #fff; }
+.screen.active { display: flex; }
+
+/* Gradient header */
+.grad-header {
+  background: linear-gradient(135deg, #00CEC9 0%, #6C5CE7 100%);
+  padding: 56px 24px 32px;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  min-height: 200px;
+}
+.logo-circle {
+  width: 56px; height: 56px; background: #fff; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700; color: #6C5CE7; flex-shrink: 0;
+}
+.success-icon-circle {
+  width: 56px; height: 56px; background: #fff; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.grad-header h1 { color: #fff; font-size: 22px; font-weight: 700; text-align: center; margin: 0; }
+.grad-header p { color: rgba(255,255,255,0.85); font-size: 14px; text-align: center; margin: 0; }
+
+/* Plain header */
+.plain-header {
+  background: #fff; border-bottom: 1px solid #F0F0F0;
+  padding: 52px 20px 16px;
+  display: flex; align-items: center; gap: 12px;
+}
+.back-btn {
+  width: 32px; height: 32px; background: #F8F9FA;
+  border: none; border-radius: 8px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; color: #2D3436; flex-shrink: 0;
+}
+.back-btn:hover { background: #E9ECEF; }
+.plain-header h2 { font-size: 17px; font-weight: 600; color: #2D3436; margin: 0; }
+
+/* Back button for gradient headers */
+.grad-back {
+  background: rgba(255,255,255,0.22); border: none; border-radius: 8px;
+  width: 32px; height: 32px; cursor: pointer; color: #fff;
+  font-size: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+}
+.grad-header-row {
+  background: linear-gradient(135deg, #00CEC9 0%, #6C5CE7 100%);
+  padding: 52px 20px 20px;
+  display: flex; align-items: center; gap: 14px;
+  min-height: 80px;
+}
+.grad-header-row h2 { color: #fff; font-size: 17px; font-weight: 600; margin: 0; }
+
+/* Screen body */
+.screen-body { flex: 1; padding: 28px 24px 24px; display: flex; flex-direction: column; }
+
+/* Fields */
+.lfield { margin-bottom: 16px; }
+.lfield label { display: block; font-size: 13px; font-weight: 500; color: #636E72; margin-bottom: 6px; }
+.input-wrap { position: relative; }
+.input-wrap input {
+  width: 100%; height: 50px; border: 1.5px solid #DFE6E9;
+  border-radius: 10px; padding: 0 44px 0 14px;
+  font-size: 15px; font-family: inherit; color: #2D3436; outline: none;
+  transition: border-color .15s; background: #fff;
+}
+.input-wrap input::placeholder { color: #B2BEC3; }
+.input-wrap input:focus { border-color: #6C5CE7; }
+.toggle-pw {
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer;
+  font-size: 13px; font-weight: 600; color: #6C5CE7;
+}
+
+/* Password requirements */
+.pw-req { list-style: none; padding: 0; margin: 8px 0 16px; display: flex; flex-direction: column; gap: 6px; }
+.pw-req li { font-size: 13px; color: #636E72; display: flex; align-items: center; gap: 8px; }
+.pw-req li::before { content: "●"; font-size: 8px; color: #B2BEC3; }
+
+/* Checkbox row */
+.row-between { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.check-label { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #636E72; cursor: pointer; }
+.check-label input[type=checkbox] { display: none; }
+.check-box {
+  width: 20px; height: 20px; border: 2px solid #DFE6E9; border-radius: 5px;
+  display: flex; align-items: center; justify-content: center; transition: all .15s; flex-shrink: 0;
+}
+.check-label input:checked ~ .check-box { background: #6C5CE7; border-color: #6C5CE7; }
+.check-label input:checked ~ .check-box::after { content: "✓"; color: #fff; font-size: 12px; font-weight: 700; }
+.llink { color: #6C5CE7; font-size: 14px; font-weight: 600; cursor: pointer; }
+.llink:hover { text-decoration: underline; }
+
+/* Buttons */
+.btn-p {
+  width: 100%; height: 52px; background: #6C5CE7; color: #fff;
+  font-size: 15px; font-weight: 600; font-family: inherit;
+  border: none; border-radius: 12px; cursor: pointer; transition: background .15s;
+}
+.btn-p:hover { background: #5241C5; }
+.btn-p:active { transform: scale(.99); }
+
+/* Divider */
+.lor { display: flex; align-items: center; gap: 12px; margin: 20px 0; color: #B2BEC3; font-size: 12px; font-weight: 600; letter-spacing: .04em; }
+.lor::before, .lor::after { content: ""; flex: 1; height: 1px; background: #DFE6E9; }
+
+/* Google button */
+.btn-google {
+  width: 100%; height: 52px; background: #fff; border: 1.5px solid #DFE6E9; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  font-size: 15px; font-weight: 600; font-family: inherit; color: #2D3436; cursor: pointer; transition: background .15s;
+}
+.btn-google:hover { background: #F8F9FA; }
+.g-icon {
+  width: 20px; height: 20px;
+  background: conic-gradient(#4285F4 0 90deg, #EA4335 90deg 180deg, #FBBC05 180deg 270deg, #34A853 270deg);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+}
+.g-icon::after { content: "G"; color: #fff; font-size: 11px; font-weight: 700; }
+
+/* Footer link */
+.footer-link { margin-top: auto; padding-top: 20px; text-align: center; font-size: 14px; color: #636E72; }
+
+/* Home indicator */
+.home-bar { height: 28px; display: flex; align-items: center; justify-content: center; padding-bottom: 8px; }
+.home-bar span { width: 120px; height: 5px; background: #2D3436; border-radius: 99px; opacity: .12; }
+
+/* Icon circles */
+.icon-circle-purple {
+  width: 72px; height: 72px; border: 2px solid #6C5CE7;
+  border-radius: 50%; background: rgba(108,92,231,0.06);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; margin: 0 auto 20px;
+}
+.icon-circle-green {
+  width: 72px; height: 72px; border: 2px solid #00B894;
+  border-radius: 50%; background: rgba(0,184,148,0.06);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; margin: 0 auto 20px;
+}
+
+/* OTP */
+.otp-row { display: flex; gap: 8px; justify-content: center; margin: 20px 0 28px; }
+.otp-box {
+  width: 44px; height: 52px; border: 1.5px solid #DFE6E9; border-radius: 10px;
+  text-align: center; font-size: 20px; font-weight: 600; color: #2D3436;
+  outline: none; font-family: inherit; transition: border-color .15s;
+}
+.otp-box:focus { border-color: #6C5CE7; }
+.otp-box.filled { border-color: #6C5CE7; background: rgba(108,92,231,0.04); }
+
+/* Center layout */
+.center-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px 24px; text-align: center; }
+.center-body h1 { font-size: 22px; font-weight: 700; color: #2D3436; margin: 0 0 10px; }
+.center-body p { font-size: 14px; color: #636E72; line-height: 1.6; margin: 0 0 24px; }
+
+/* Badges */
+.lbadge-success { display: inline-flex; align-items: center; gap: 6px; background: rgba(0,184,148,0.1); color: #00B894; border-radius: 6px; padding: 4px 10px; font-size: 13px; font-weight: 600; }
+.lbadge-info { display: inline-flex; align-items: center; gap: 6px; background: rgba(108,92,231,0.08); color: #6C5CE7; border-radius: 6px; padding: 6px 12px; font-size: 13px; font-weight: 500; }
+
+/* Success splash overlay */
+.splash-overlay {
+  position: fixed; inset: 0; z-index: 999;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #00CEC9 0%, #6C5CE7 100%);
+  opacity: 0; pointer-events: none;
+  transition: opacity .4s;
+}
+.splash-overlay.show { opacity: 1; pointer-events: all; }
+.splash-icon { font-size: 64px; margin-bottom: 16px; }
+.splash-title { color: #fff; font-size: 26px; font-weight: 700; margin: 0 0 8px; }
+.splash-sub { color: rgba(255,255,255,0.85); font-size: 15px; margin: 0; }
+
+/* Nav hint bar */
+.nav-hint {
+  position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+  background: rgba(0,0,0,.7); color: #fff; border-radius: 8px;
+  padding: 5px 14px; font-size: 12px; opacity: 0; white-space: nowrap;
+  transition: opacity .3s; pointer-events: none; z-index: 998;
+}
+
+/* ═══════════════════════════════════════
+   APP VIEW (existing styles)
+═══════════════════════════════════════ */
+#app-view { display: none; }
+#app-view.active { display: flex; flex-direction: column; min-height: 100vh; }
+
+header.app-header { position: sticky; top: 0; z-index: 10; background: var(--card); border-bottom: 1px solid var(--border); }
+.header-inner { max-width: 640px; margin: 0 auto; padding: 16px; display: flex; align-items: center; justify-content: space-between; }
+.app-title { font-size: 18px; font-weight: 700; margin: 0; }
+.header-pills { display: flex; gap: 8px; font-size: 14px; }
+.pill { display: inline-flex; align-items: center; gap: 4px; border-radius: 9999px; padding: 4px 10px; font-weight: 600; }
+.pill-streak { background: rgba(253,203,110,0.15); color: var(--orange); }
+.pill-xp { background: rgba(108,92,231,0.1); color: var(--brand-primary); }
+main { max-width: 640px; margin: 0 auto; width: 100%; flex: 1; padding: 24px 16px; }
+.tabs-list { display: grid; grid-template-columns: repeat(3,1fr); gap: 4px; background: rgba(0,0,0,0.04); border-radius: 12px; padding: 4px; margin-bottom: 16px; }
+.tab-trigger { border: none; background: transparent; border-radius: 8px; padding: 10px 4px; font-size: 14px; font-weight: 500; color: var(--muted); cursor: pointer; }
+.tab-trigger.active { background: rgba(108,92,231,0.1); color: var(--brand-primary); font-weight: 600; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px; }
+.card-header { padding: 16px 16px 0; }
+.card-header-row { display: flex; align-items: center; justify-content: space-between; }
+.card-title { font-size: 16px; font-weight: 600; margin: 0; }
+.card-subtitle { font-size: 12px; color: var(--muted); margin: 4px 0 0; }
+.card-content { padding: 16px; }
+.card-content > * + * { margin-top: 12px; }
+ul.task-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--border); }
+ul.task-list li { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+ul.task-list li:last-child { border-bottom: none; }
+.task-title { flex: 1; font-size: 14px; font-weight: 500; line-height: 1.3; }
+.task-title.done { color: var(--muted); text-decoration: line-through; }
+.time-label { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.badge { display: inline-flex; align-items: center; border-radius: 9999px; padding: 4px 10px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.badge-high { background: rgba(214,48,49,0.1); color: var(--danger); }
+.badge-medium { background: rgba(225,112,85,0.1); color: var(--orange); }
+.badge-low { background: rgba(253,203,110,0.15); color: var(--warning); }
+button.btn { border: none; border-radius: 9999px; font-weight: 600; cursor: pointer; padding: 10px 18px; font-size: 14px; transition: background-color .15s; font-family: inherit; }
+.btn-primary { background: var(--brand-primary); color: white; }
+.btn-primary:hover { background: #5241C5; }
+.btn-success { background: var(--success); color: white; }
+.btn-success:hover { background: rgba(0,184,148,0.9); }
+.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--foreground); }
+.btn-outline:hover { background: var(--muted-bg); }
+.btn-outline-danger { background: transparent; border: 1px solid var(--orange); color: var(--orange); }
+.btn-outline-danger:hover { background: rgba(225,112,85,0.1); }
+button.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+button.btn-sm { padding: 6px 14px; font-size: 13px; }
+button.btn-block { width: 100%; }
+input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--brand-primary); cursor: pointer; flex-shrink: 0; }
+.quote-box { background: rgba(108,92,231,0.1); color: var(--brand-primary); border-radius: 12px; padding: 16px; font-size: 14px; font-weight: 500; }
+.teal-banner { background: rgba(0,206,201,0.15); color: var(--brand-secondary); border-radius: 12px; padding: 16px; text-align: center; font-size: 14px; font-weight: 500; }
+.empty-box { background: var(--muted-bg); border-radius: 8px; padding: 24px 16px; text-align: center; font-size: 14px; color: var(--muted); }
+.done-box { background: rgba(0,184,148,0.1); border-radius: 12px; padding: 16px; text-align: center; }
+.done-box p { color: var(--success); font-weight: 600; font-size: 14px; margin: 0; }
+.progress-track { width: 100%; height: 8px; background: var(--muted-bg); border-radius: 9999px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 9999px; transition: width .3s; }
+.stat-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; }
+.stat-cell { border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; }
+.stat-icon { font-size: 24px; }
+.stat-value { margin: 4px 0 0; font-size: 18px; font-weight: 700; }
+.stat-label { font-size: 12px; color: var(--muted); margin: 0; }
+.section-label { font-size: 12px; font-weight: 500; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+.task-pick-list { display: flex; flex-direction: column; gap: 8px; }
+.task-pick { display: block; width: 100%; text-align: left; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 14px; background: transparent; cursor: pointer; color: var(--foreground); font-family: inherit; }
+.task-pick:hover { background: var(--muted-bg); }
+.task-pick.selected { border-color: var(--brand-primary); background: rgba(108,92,231,0.05); }
+.task-pick .pick-time { margin-left: 8px; font-size: 12px; color: var(--muted); }
+.duration-row { display: flex; gap: 8px; }
+.dur-btn { flex: 1; border-radius: 9999px; border: 1px solid var(--border); padding: 8px 12px; font-size: 14px; font-weight: 500; background: transparent; cursor: pointer; color: var(--foreground); font-family: inherit; }
+.dur-btn:hover { background: var(--muted-bg); }
+.dur-btn.selected { border-color: var(--brand-primary); background: var(--brand-primary); color: white; }
+.dur-btn.suggested:not(.selected) { border-color: rgba(108,92,231,0.5); }
+.ai-hint { color: var(--brand-primary); }
+.focus-running { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 32px 16px; text-align: center; }
+.focus-overline { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; margin: 0; }
+.focus-task-title { font-size: 18px; font-weight: 600; line-height: 1.3; margin: 0; }
+.focus-time { font-size: 56px; font-weight: 700; margin: 0; font-variant-numeric: tabular-nums; }
+.focus-sub { font-size: 12px; color: var(--muted); margin: 0; }
+.focus-actions { display: flex; justify-content: center; gap: 12px; padding-top: 8px; }
+.focus-actions form, .focus-progress-wrap { width: 100%; }
+.dialog-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 16px; }
+.dialog-overlay.hidden { display: none; }
+.dialog-box { background: var(--card); border-radius: 12px; padding: 24px; max-width: 420px; width: 100%; }
+.dialog-title { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; margin: 0 0 8px; }
+.dialog-desc { font-size: 14px; color: var(--muted); margin: 0 0 20px; line-height: 1.5; }
+.dialog-footer { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+#toast-container { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 8px; z-index: 60; width: 100%; max-width: 360px; padding: 0 16px; }
+.toast { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); font-size: 14px; }
+.toast-title { font-weight: 600; }
+.toast-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     LOGIN VIEW
+═══════════════════════════════════════════════════ -->
+<div id="login-view">
+<div class="phone">
+
+  <!-- S1: Đăng nhập -->
+  <div class="screen active" id="s-login">
+    <div class="grad-header">
+      <div class="logo-circle">LG</div>
+      <h1>Chào mừng trở lại!</h1>
+      <p>Đăng nhập để tiếp tục sử dụng</p>
+    </div>
+    <div class="screen-body">
+      <div class="lfield">
+        <label>Email</label>
+        <div class="input-wrap"><input type="email" placeholder="Nhập email của bạn" value="minh@focusflow.vn" /></div>
+      </div>
+      <div class="lfield">
+        <label>Mật khẩu</label>
+        <div class="input-wrap">
+          <input type="password" id="pw-login" placeholder="••••••••" value="password123" />
+          <button class="toggle-pw" onclick="togglePw('pw-login',this)">Hiện</button>
+        </div>
+      </div>
+      <div class="row-between">
+        <label class="check-label">
+          <input type="checkbox" checked /><span class="check-box"></span> Ghi nhớ đăng nhập
+        </label>
+        <span class="llink" onclick="lgo('s-forgot-1')">Quên mật khẩu?</span>
+      </div>
+      <button class="btn-p" onclick="loginSuccess()">Đăng nhập</button>
+      <div class="lor">HOẶC</div>
+      <button class="btn-google" onclick="loginSuccess()">
+        <span class="g-icon"></span> Đăng nhập với Google
+      </button>
+      <div class="footer-link">Chưa có tài khoản? <span class="llink" onclick="lgo('s-register')">Đăng ký ngay</span></div>
+    </div>
+    <div class="home-bar"><span></span></div>
+  </div>
+
+  <!-- S2: Đăng ký -->
+  <div class="screen" id="s-register">
+    <div class="grad-header-row">
+      <button class="grad-back" onclick="lgo('s-login')">‹</button>
+      <h2>Tạo tài khoản</h2>
+    </div>
+    <div class="screen-body">
+      <div class="lfield"><label>Họ và tên</label><div class="input-wrap"><input type="text" placeholder="Nhập họ và tên" /></div></div>
+      <div class="lfield"><label>Email</label><div class="input-wrap"><input type="email" placeholder="Nhập email của bạn" /></div></div>
+      <div class="lfield">
+        <label>Mật khẩu</label>
+        <div class="input-wrap">
+          <input type="password" id="pw-reg" placeholder="Tạo mật khẩu (tối thiểu 8 ký tự)" />
+          <button class="toggle-pw" onclick="togglePw('pw-reg',this)">Hiện</button>
+        </div>
+      </div>
+      <div class="lfield">
+        <label>Xác nhận mật khẩu</label>
+        <div class="input-wrap">
+          <input type="password" id="pw-reg2" placeholder="Nhập lại mật khẩu" />
+          <button class="toggle-pw" onclick="togglePw('pw-reg2',this)">Hiện</button>
+        </div>
+      </div>
+      <label class="check-label" style="margin-bottom:14px;">
+        <input type="checkbox" checked /><span class="check-box"></span>
+        <span style="font-size:13px;">Tôi đồng ý với <span class="llink" style="font-size:13px;">Điều khoản &amp; Chính sách bảo mật</span></span>
+      </label>
+      <div style="margin-bottom:18px;"><span class="lbadge-success">✔ Mật khẩu mạnh</span></div>
+      <button class="btn-p" onclick="lgo('s-email-verify')">Đăng ký</button>
+      <div class="footer-link">Đã có tài khoản? <span class="llink" onclick="lgo('s-login')">Đăng nhập</span></div>
+    </div>
+    <div class="home-bar"><span></span></div>
+  </div>
+
+  <!-- S3: Xác thực Email -->
+  <div class="screen" id="s-email-verify">
+    <div class="grad-header-row">
+      <button class="grad-back" onclick="lgo('s-register')">‹</button>
+      <h2>Xác thực Email</h2>
+    </div>
+    <div class="center-body">
+      <div class="icon-circle-purple">✉️</div>
+      <p style="margin-bottom:0;">Nhập mã 6 chữ số đã được gửi đến email của bạn để xác thực.</p>
+      <div class="otp-row">
+        <input class="otp-box filled" type="text" maxlength="1" value="5" />
+        <input class="otp-box" type="text" maxlength="1" />
+        <input class="otp-box" type="text" maxlength="1" />
+        <input class="otp-box" type="text" maxlength="1" />
+        <input class="otp-box" type="text" maxlength="1" />
+        <input class="otp-box" type="text" maxlength="1" />
+      </div>
+      <button class="btn-p" style="width:100%;" onclick="lgo('s-signup-success')">Xác nhận</button>
+      <p style="margin-top:16px;font-size:14px;color:#636E72;">Không nhận được mã? <span class="llink">Gửi lại</span></p>
+    </div>
+    <div class="home-bar"><span></span></div>
+  </div>
+
+  <!-- S4: Đăng ký thành công -->
+  <div class="screen" id="s-signup-success">
+    <div class="grad-header">
+      <div class="success-icon-circle">✅</div>
+      <h1>Đăng ký thành công!</h1>
+      <p>Chào mừng bạn đến với cộng đồng</p>
+    </div>
+    <div class="screen-body" style="justify-content:center;gap:16px;align-items:center;">
+      <p style="font-size:15px;color:#636E72;line-height:1.6;text-align:center;margin:0;">
+        Tài khoản của bạn đã được tạo thành công. Hãy khám phá các tính năng hữu ích đang chờ bạn.
+      </p>
+      <span class="lbadge-info">ℹ️ Email xác nhận đã được gửi</span>
+      <button class="btn-p" onclick="loginSuccess()">Bắt đầu sử dụng</button>
+    </div>
+    <div class="home-bar"><span></span></div>
+  </div>
+
+  <!-- S5: Quên mật khẩu — Nhập email -->
+  <div class="screen" id="s-forgot-1">
+    <div class="plain-header">
+      <button class="back-btn" onclick="lgo('s-login')">‹</button>
+      <h2>Quên mật khẩu</h2>
+    </div>
+    <div style="flex:1;padding:40px 24px 24px;display:flex;flex-direction:column;">
+      <div style="text-align:center;margin-bottom:24px;">
+        <div class="icon-circle-purple">✉️</div>
+        <h1 style="font-size:22px;font-weight:700;color:#2D3436;margin:0 0 8px;">Quên mật khẩu?</h1>
+        <p style="font-size:14px;color:#636E72;line-height:1.6;margin:0;">Nhập email đã đăng ký, chúng tôi sẽ gửi link đặt lại mật khẩu cho bạn</p>
+      </div>
+      <div class="lfield"><label>Email</label><div class="input-wrap"><input type="email" placeholder="Nhập email của bạn" /></div></div>
+      <button class="btn-p" onclick="lgo('s-forgot-2')">Gửi yêu cầu</button>
+    </div>
+    <div class="home-bar"><span></span></div>
+  </div>
+
+  <!-- S6: Email đã gửi -->
+  <div class="screen" id="s-forgot-2">
+    <div class="plain-header">
+      <button class="back-btn" onclick="lgo('s-forgot-1')">‹</button>
+      <h2>Quên mật khẩu</h2>
+    </div>
+    <div class="center-body">
+      <div class="icon-circle-green">✔</div>
+      <h1>Email đã gửi!</h1>
+      <p>Chúng tôi đã gửi link đặt lại mật khẩu đến email của bạn. Vui lòng kiểm tra hộp thư (kể cả thư mục spam).</p>
+      <button class="btn-p" style="width:100%;" onclick="lgo('s-login')">Quay lại đăng nhập</button>
+      <p style="margin-top:16px;font-size:14px;color:#636E72;">Không nhận được email? <span class="llink" onclick="lgo('s-forgot-1')">Gửi lại</span></p>
+    </div>
+    <div class="home-bar"><span></span></div>
+  </div>
+
+  <!-- S7: Đặt lại mật khẩu mới -->
+  <div class="screen" id="s-reset-pw">
+    <div class="plain-header">
+      <button class="back-btn" onclick="lgo('s-forgot-2')">‹</button>
+      <h2>Đặt lại mật khẩu</h2>
+    </div>
+    <div class="screen-body">
+      <h1 style="font-size:22px;font-weight:700;color:#2D3436;margin:0 0 8px;">Tạo mật khẩu mới</h1>
+      <p style="font-size:14px;color:#636E72;margin:0 0 24px;line-height:1.6;">Mật khẩu mới phải khác mật khẩu cũ và đáp ứng các yêu cầu bên dưới</p>
+      <div class="lfield">
+        <label>Mật khẩu mới</label>
+        <div class="input-wrap">
+          <input type="password" id="pw-new" placeholder="Nhập mật khẩu mới" />
+          <button class="toggle-pw" onclick="togglePw('pw-new',this)">Hiện</button>
+        </div>
+      </div>
+      <ul class="pw-req">
+        <li>Ít nhất 8 ký tự</li>
+        <li>Có ít nhất 1 chữ số</li>
+        <li>Có ít nhất 1 chữ in hoa</li>
+      </ul>
+      <div class="lfield">
+        <label>Xác nhận mật khẩu mới</label>
+        <div class="input-wrap">
+          <input type="password" id="pw-new2" placeholder="Nhập lại mật khẩu mới" />
+          <button class="toggle-pw" onclick="togglePw('pw-new2',this)">Hiện</button>
+        </div>
+      </div>
+      <button class="btn-p" onclick="lgo('s-reset-success')">Đặt lại mật khẩu</button>
+    </div>
+    <div class="home-bar"><span></span></div>
+  </div>
+
+  <!-- S8: Đặt lại thành công -->
+  <div class="screen" id="s-reset-success">
+    <div class="plain-header">
+      <button class="back-btn" onclick="lgo('s-login')">‹</button>
+      <h2>Đặt lại mật khẩu</h2>
+    </div>
+    <div class="center-body">
+      <div class="icon-circle-green">✔</div>
+      <h1>Thành công!</h1>
+      <p>Mật khẩu của bạn đã được đặt lại thành công. Hãy đăng nhập lại bằng mật khẩu mới.</p>
+      <button class="btn-p" style="width:100%;" onclick="lgo('s-login')">Đăng nhập ngay</button>
+    </div>
+    <div class="home-bar"><span></span></div>
+  </div>
+
+</div><!-- /phone -->
+</div><!-- /login-view -->
+
+<!-- Success splash -->
+<div class="splash-overlay" id="splash">
+  <div class="splash-icon">🎉</div>
+  <p class="splash-title" id="splash-title">Đăng nhập thành công!</p>
+  <p class="splash-sub" id="splash-sub">Chào mừng bạn trở lại, Minh 👋</p>
+</div>
+
+<!-- Nav hint -->
+<div class="nav-hint" id="lhint"></div>
+
+<!-- ═══════════════════════════════════════════════════
+     APP VIEW
+═══════════════════════════════════════════════════ -->
+<div id="app-view">
+  <header class="app-header">
+    <div class="header-inner">
+      <p class="app-title">FocusFlow</p>
+      <div class="header-pills">
+        <div class="pill pill-streak"><span>🔥</span><span id="streak-value">4 ngày</span></div>
+        <div class="pill pill-xp"><span>⚡</span><span id="xp-value">120 XP</span></div>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="tabs-list">
+      <button class="tab-trigger" data-tab="today" onclick="setTab('today')">🌅 Hôm nay</button>
+      <button class="tab-trigger" data-tab="focus" onclick="setTab('focus')">⏱ Focus</button>
+      <button class="tab-trigger" data-tab="stats" onclick="setTab('stats')">📊 Thống kê</button>
+    </div>
+    <div id="tab-today"></div>
+    <div id="tab-focus"></div>
+    <div id="tab-stats"></div>
+  </main>
+
+  <div id="break-dialog" class="dialog-overlay hidden">
+    <div class="dialog-box">
+      <p class="dialog-title"><span>🌟</span> Break Guardian</p>
+      <p class="dialog-desc" id="break-dialog-desc"></p>
+      <div class="dialog-footer">
+        <button class="btn btn-outline" onclick="extendBreak(300)">Nghỉ thêm 5 phút</button>
+        <button class="btn btn-primary" onclick="returnToFocus()">Quay lại Focus 🌟</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════
+   LOGIN LOGIC
+═══════════════════════════════════════ */
+function lgo(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(screenId).classList.add('active');
+  showLhint(screenId);
+}
+
+function togglePw(id, btn) {
+  const el = document.getElementById(id);
+  el.type = el.type === 'password' ? 'text' : 'password';
+  btn.textContent = el.type === 'password' ? 'Hiện' : 'Ẩn';
+}
+
+function loginSuccess() {
+  const splash = document.getElementById('splash');
+  const activeScreen = document.querySelector('.screen.active')?.id;
+  if (activeScreen === 's-signup-success') {
+    document.getElementById('splash-title').textContent = 'Đăng ký thành công!';
+    document.getElementById('splash-sub').textContent = 'Chào mừng bạn đến với FocusFlow 🌟';
+  } else {
+    document.getElementById('splash-title').textContent = 'Đăng nhập thành công!';
+    document.getElementById('splash-sub').textContent = 'Chào mừng trở lại, Minh 👋';
+  }
+  splash.classList.add('show');
+  setTimeout(() => {
+    splash.classList.remove('show');
+    document.getElementById('login-view').style.display = 'none';
+    document.getElementById('app-view').classList.add('active');
+    render();
+    showToast('Chào mừng trở lại, Minh! 👋', 'Hôm nay bạn có 7 task đang chờ. Bắt đầu thôi!');
+  }, 1800);
+}
+
+// OTP auto-advance
+document.querySelectorAll('.otp-box').forEach((box, i, boxes) => {
+  box.addEventListener('input', () => {
+    if (box.value.length === 1 && i < boxes.length - 1) boxes[i+1].focus();
+    box.classList.toggle('filled', box.value.length > 0);
+  });
+  box.addEventListener('keydown', e => {
+    if (e.key === 'Backspace' && !box.value && i > 0) boxes[i-1].focus();
+  });
+});
+
+// Nav hint
+const lhints = {
+  's-login':         'Flow 1 • Đăng nhập',
+  's-register':      'Flow 1 • Đăng ký',
+  's-email-verify':  'Flow 1 • Xác thực Email',
+  's-signup-success':'Flow 1 • Đăng ký thành công',
+  's-forgot-1':      'Flow 2 • Quên mật khẩu',
+  's-forgot-2':      'Flow 2 • Email đã gửi',
+  's-reset-pw':      'Flow 2 • Tạo mật khẩu mới',
+  's-reset-success': 'Flow 2 • Đặt lại thành công',
+};
+let lhintTimer;
+function showLhint(id) {
+  const el = document.getElementById('lhint');
+  el.textContent = lhints[id] || id;
+  el.style.opacity = '.85';
+  clearTimeout(lhintTimer);
+  lhintTimer = setTimeout(() => { el.style.opacity = '0'; }, 2500);
+}
+showLhint('s-login');
+
+/* ═══════════════════════════════════════
+   APP LOGIC
+═══════════════════════════════════════ */
+const initialTasks = [
+  { id:"t1", title:"Hoàn thiện báo cáo Q2 cho sếp",          priority:"high",   estimatedMinutes:50, completed:false },
+  { id:"t2", title:"Review wireframe cho team Design",         priority:"high",   estimatedMinutes:25, completed:false },
+  { id:"t3", title:"Trả lời email khách hàng VIP",             priority:"medium", estimatedMinutes:15, completed:false },
+  { id:"t4", title:"Chuẩn bị agenda họp team chiều",           priority:"medium", estimatedMinutes:15, completed:false },
+  { id:"t5", title:"Dọn dẹp inbox buổi sáng",                  priority:"low",    estimatedMinutes:5,  completed:false, isQuickWin:true },
+  { id:"t6", title:"Cập nhật trạng thái task trên Jira",       priority:"low",    estimatedMinutes:5,  completed:false, isQuickWin:true },
+  { id:"t7", title:"Đọc tài liệu hướng dẫn tính năng mới",    priority:"low",    estimatedMinutes:20, completed:false },
+];
+
+const motivationQuotes = [
+  "Một ngày mới, một cơ hội mới để tiến gần hơn tới mục tiêu của bạn! 🌟",
+  "Bạn không cần làm hết mọi thứ hôm nay — chỉ cần làm điều quan trọng nhất. 💪",
+  "Tiến bộ nhỏ mỗi ngày tạo nên thay đổi lớn. Bắt đầu nào! 🚀",
+  "Hít một hơi thật sâu, chọn 1 việc, và bắt đầu. Bạn làm được! 🌿",
+];
+
+const focusDurations = [15,25,35,50];
+const breakDurationSeconds = 5*60;
+const breakNudgeAfterSeconds = 3*60;
+const quickWinDurationSeconds = 5*60;
+const priorityConfig = { high:{label:"Cao",className:"badge-high"}, medium:{label:"TB",className:"badge-medium"}, low:{label:"Thấp",className:"badge-low"} };
+const priorityRank = { high:0, medium:1, low:2 };
+
+function formatTime(s) { const m=Math.floor(s/60); return `${String(m).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`; }
+function suggestDuration(min) { let c=focusDurations[0],d=Math.abs(min-c); for(const x of focusDurations){ const df=Math.abs(min-x); if(df<d){d=df;c=x;} } return c; }
+function getAiTopTasks(tasks,n=3) { return [...tasks].filter(t=>!t.completed&&!t.isQuickWin).sort((a,b)=>priorityRank[a.priority]-priorityRank[b.priority]).slice(0,n); }
+function getQuickWinTask(tasks) { return tasks.find(t=>!t.completed&&t.isQuickWin) || [...tasks].filter(t=>!t.completed).sort((a,b)=>a.estimatedMinutes-b.estimatedMinutes)[0] || null; }
+function esc(s) { return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+const state = {
+  tasks: JSON.parse(JSON.stringify(initialTasks)),
+  streak:4, xp:120, focusMinutesToday:0,
+  timer:{mode:"idle",durationSeconds:0,remainingSeconds:0,isRunning:false,activeTaskId:null},
+  breakNudgeOpen:false, activeTab:"today",
+  selectedTaskId:null, selectedDuration:25,
+  quickWinForTaskId:null, quickWinStatus:"idle", quickWinRemaining:quickWinDurationSeconds,
+};
+let breakOverrun=0, toasts=[], toastId=0;
+
+function setTab(t){state.activeTab=t;render();}
+function toggleTask(id,xp=0){const t=state.tasks.find(t=>t.id===id);t.completed=!t.completed;if(xp)state.xp+=xp;render();}
+function startFocus(taskId,minutes){state.timer={mode:"focus",durationSeconds:minutes*60,remainingSeconds:minutes*60,isRunning:true,activeTaskId:taskId};breakOverrun=0;state.breakNudgeOpen=false;state.activeTab="focus";render();}
+function pauseTimer(){state.timer.isRunning=false;render();}
+function resumeTimer(){state.timer.isRunning=true;render();}
+function resetTimer(){state.timer={mode:"idle",durationSeconds:0,remainingSeconds:0,isRunning:false,activeTaskId:null};breakOverrun=0;state.breakNudgeOpen=false;render();}
+function extendBreak(s){state.timer={...state.timer,mode:"break",durationSeconds:state.timer.durationSeconds+s,remainingSeconds:s,isRunning:true};breakOverrun=0;state.breakNudgeOpen=false;render();}
+function returnToFocus(){state.breakNudgeOpen=false;resetTimer();}
+function selectFocusTask(id){state.selectedTaskId=id;const t=state.tasks.find(t=>t.id===id);state.selectedDuration=suggestDuration(t.estimatedMinutes);render();}
+function selectFocusDuration(d){state.selectedDuration=d;render();}
+function startQuickWin(){state.quickWinStatus="running";render();}
+function completeQuickWin(id){state.quickWinStatus="done";toggleTask(id,10);}
+
+function showToast(title,desc){const id=++toastId;toasts.push({id,title,desc});renderToasts();setTimeout(()=>{toasts=toasts.filter(t=>t.id!==id);renderToasts();},4000);}
+function renderToasts(){document.getElementById('toast-container').innerHTML=toasts.map(t=>`<div class="toast"><div class="toast-title">${esc(t.title)}</div><div class="toast-desc">${esc(t.desc)}</div></div>`).join('');}
+
+setInterval(()=>{
+  let nr=false;
+  if(state.timer.isRunning){
+    if(state.timer.remainingSeconds>1){state.timer.remainingSeconds-=1;}
+    else if(state.timer.mode==="focus"){
+      state.focusMinutesToday+=Math.round(state.timer.durationSeconds/60);
+      showToast("Hoàn thành phiên tập trung! Đến giờ nghỉ giải lao 🌿","Nghỉ 5 phút trước khi tiếp tục nhé.");
+      state.timer={mode:"break",durationSeconds:breakDurationSeconds,remainingSeconds:breakDurationSeconds,isRunning:true,activeTaskId:state.timer.activeTaskId};
+    } else if(state.timer.mode==="break"){
+      showToast("Break xong rồi! Quay lại nào 🌟","Chỉ cần 1 Pomodoro nữa thôi, bạn làm được!");
+      breakOverrun=0;state.timer.remainingSeconds=0;state.timer.isRunning=false;
+    }
+    nr=true;
+  }
+  if(state.timer.mode==="break"&&state.timer.remainingSeconds===0&&!state.timer.isRunning){
+    breakOverrun+=1;
+    if(breakOverrun>=breakNudgeAfterSeconds&&!state.breakNudgeOpen){state.breakNudgeOpen=true;nr=true;}
+  }
+  if(state.quickWinStatus==="running"&&state.quickWinRemaining>0){state.quickWinRemaining-=1;nr=true;}
+  if(nr)render();
+},1000);
+
+function renderToday(){
+  const {tasks}=state;
+  const topTasks=getAiTopTasks(tasks,3);
+  const pendingCount=tasks.filter(t=>!t.completed).length;
+  const quote=motivationQuotes[tasks.length%motivationQuotes.length];
+  let h=`<div class="card"><div class="card-header"><p class="card-title">🤖 AI Top 3 hôm nay</p><p class="card-subtitle">Còn ${pendingCount} task • tập trung làm 3 việc này trước</p></div><div class="card-content">`;
+  if(!topTasks.length){h+=`<p class="empty-box">Hôm nay trống lịch! Thêm task hoặc nghỉ ngơi 🌿</p>`;}
+  else{h+=`<ul class="task-list">`;for(const t of topTasks){const pc=priorityConfig[t.priority];h+=`<li><input type="checkbox" ${t.completed?"checked":""} onchange="toggleTask('${t.id}')" /><p class="task-title ${t.completed?"done":""}">${esc(t.title)}</p><span class="badge ${pc.className}">${pc.label}</span><span class="time-label">${t.estimatedMinutes}p</span></li>`;}h+=`</ul>`;}
+  h+=`<div class="quote-box">💬 "${esc(quote)}"</div></div></div>`;
+  const qwTask=getQuickWinTask(tasks);
+  if(qwTask&&state.quickWinForTaskId!==qwTask.id){state.quickWinForTaskId=qwTask.id;state.quickWinStatus="idle";state.quickWinRemaining=quickWinDurationSeconds;}
+  let qw=`<div class="card"><div class="card-header"><p class="card-title">⚡ Quick Win Starter</p></div><div class="card-content">`;
+  if(!qwTask){qw+=`<p style="font-size:14px;color:var(--muted);margin:0;">Thêm 1 task nhanh: dọn inbox, trả lời 1 email, hoặc review calendar</p>`;}
+  else if(state.quickWinStatus==="done"){qw+=`<div class="done-box"><p>Ngày mới bắt đầu tuyệt vời! 🎉 +10 XP</p></div>`;}
+  else{qw+=`<p style="font-size:14px;color:var(--muted);margin:0;">${esc(qwTask.title)} — chỉ ${qwTask.estimatedMinutes} phút!</p><div style="display:flex;align-items:center;justify-content:space-between;">`;const chip=state.quickWinStatus==="running"?formatTime(state.quickWinRemaining):`${qwTask.estimatedMinutes} phút`;qw+=`<span class="badge" style="background:rgba(0,206,201,0.15);color:var(--brand-secondary);">${chip}</span>`;if(state.quickWinStatus==="idle"){qw+=`<button class="btn btn-sm btn-primary" onclick="startQuickWin()">Bắt đầu ngay</button>`;}else{qw+=`<button class="btn btn-sm btn-success" onclick="completeQuickWin('${qwTask.id}')">Hoàn thành ✓</button>`;}qw+=`</div>`;}
+  qw+=`</div></div>`;
+  const pending=tasks.filter(t=>!t.completed),done=tasks.filter(t=>t.completed);
+  let tl=`<div class="card"><div class="card-header"><div class="card-header-row"><p class="card-title">📋 Công việc hôm nay</p><span class="time-label">${done.length}/${tasks.length} hoàn thành</span></div></div><div class="card-content"><ul class="task-list">`;
+  for(const t of pending){const pc=priorityConfig[t.priority];const dis=state.timer.mode!=="idle"?"disabled":"";tl+=`<li><input type="checkbox" onchange="toggleTask('${t.id}')" /><p class="task-title">${esc(t.title)}</p><span class="badge ${pc.className}">${pc.label}</span><span class="time-label">${t.estimatedMinutes}p</span><button class="btn btn-sm btn-primary" ${dis} onclick="startFocus('${t.id}',${t.estimatedMinutes})">▶ Focus</button></li>`;}
+  tl+=`</ul></div></div>`;
+  if(done.length){tl+=`<div class="card"><div class="card-header"><p class="card-title">✅ Đã hoàn thành</p></div><div class="card-content"><ul class="task-list">`;for(const t of done){const pc=priorityConfig[t.priority];tl+=`<li><input type="checkbox" checked onchange="toggleTask('${t.id}')" /><p class="task-title done">${esc(t.title)}</p><span class="badge ${pc.className}">${pc.label}</span><span class="time-label">${t.estimatedMinutes}p</span></li>`;}tl+=`</ul></div></div>`;}
+  document.getElementById('tab-today').innerHTML=h+qw+tl;
+}
+
+function renderFocus(){
+  const pending=state.tasks.filter(t=>!t.completed);
+  if(state.timer.mode==="idle"){
+    if(!state.selectedTaskId&&pending[0]){state.selectedTaskId=pending[0].id;state.selectedDuration=suggestDuration(pending[0].estimatedMinutes);}
+    const sel=state.tasks.find(t=>t.id===state.selectedTaskId);
+    const ai=sel?suggestDuration(sel.estimatedMinutes):25;
+    let h=`<div class="card"><div class="card-header"><p class="card-title">⏱ Smart Focus Timer</p><p class="card-subtitle">Chọn task và thời lượng phù hợp để bắt đầu tập trung.</p></div><div class="card-content"><div><p class="section-label">Chọn task</p><div class="task-pick-list">`;
+    if(!pending.length){h+=`<p style="font-size:14px;color:var(--muted);margin:0;">Bạn đã hoàn thành hết task hôm nay! 🎉</p>`;}
+    for(const t of pending){const s=state.selectedTaskId===t.id?"selected":"";h+=`<button class="task-pick ${s}" onclick="selectFocusTask('${t.id}')">${esc(t.title)}<span class="pick-time">⏱ ${t.estimatedMinutes} phút</span></button>`;}
+    h+=`</div></div>`;
+    if(sel){h+=`<div><p class="section-label">Thời lượng <span class="ai-hint">· AI gợi ý ${ai} phút</span></p><div class="duration-row">`;for(const d of focusDurations){const s=state.selectedDuration===d?"selected":"";const sg=ai===d&&state.selectedDuration!==d?"suggested":"";h+=`<button class="dur-btn ${s} ${sg}" onclick="selectFocusDuration(${d})">${d}p</button>`;}h+=`</div></div>`;}
+    const dis=!sel?"disabled":"";const act=sel?`startFocus('${sel.id}',${state.selectedDuration})`:"";
+    h+=`<button class="btn btn-primary btn-block" ${dis} onclick="${act}">▶ Bắt đầu Focus ${state.selectedDuration} phút</button></div></div>`;
+    document.getElementById('tab-focus').innerHTML=h;return;
+  }
+  const prog=((state.timer.durationSeconds-state.timer.remainingSeconds)/state.timer.durationSeconds)*100;
+  const isBreak=state.timer.mode==="break";
+  const ac=isBreak?"var(--brand-secondary)":"var(--brand-primary)";
+  const at=state.tasks.find(t=>t.id===state.timer.activeTaskId);
+  let h=`<div class="card"><div class="focus-running"><p class="focus-overline" style="color:${ac};">${isBreak?"🌿 ĐANG NGHỈ GIẢI LAO":"⏱ ĐANG TẬP TRUNG"}</p>${at?`<p class="focus-task-title">${esc(at.title)}</p>`:""}<p class="focus-time" style="color:${ac};">${formatTime(state.timer.remainingSeconds)}</p><p class="focus-sub">còn lại / ${formatTime(state.timer.durationSeconds)} phút</p><div class="focus-progress-wrap"><div class="progress-track"><div class="progress-fill" style="width:${prog}%;background:${ac};"></div></div></div><div class="focus-actions">`;
+  h+=state.timer.isRunning?`<button class="btn btn-outline" onclick="pauseTimer()">⏸ Tạm dừng</button>`:`<button class="btn btn-outline" onclick="resumeTimer()">▶ Tiếp tục</button>`;
+  h+=`<button class="btn btn-outline-danger" onclick="resetTimer()">↺ Reset</button></div></div></div>`;
+  h+=`<div class="teal-banner">${isBreak?"🌿 Tận hưởng giờ nghỉ — sắp quay lại vùng tập trung!":"🔥 Đang trong vùng tập trung — đừng bỏ cuộc!"}</div>`;
+  document.getElementById('tab-focus').innerHTML=h;
+}
+
+function renderStats(){
+  const {tasks,streak,xp,focusMinutesToday}=state;
+  const completed=tasks.filter(t=>t.completed).length;
+  const stats=[{label:"Focus hôm nay",value:`${focusMinutesToday} phút`,icon:"⏱",color:"var(--brand-primary)"},{label:"Task hoàn thành",value:`${completed}/${tasks.length}`,icon:"✅",color:"var(--success)"},{label:"Focus Streak",value:`${streak} ngày`,icon:"🔥",color:"var(--warning)"},{label:"Tổng XP",value:`${xp} XP`,icon:"⚡",color:"var(--brand-secondary)"}];
+  let h=`<div class="card"><div class="card-header"><p class="card-title">📊 Productivity Pulse</p><p class="card-subtitle">Tổng quan năng suất của bạn hôm nay</p></div><div class="card-content"><div class="stat-grid">`;
+  for(const s of stats){h+=`<div class="stat-cell"><p class="stat-icon">${s.icon}</p><p class="stat-value" style="color:${s.color};">${s.value}</p><p class="stat-label">${s.label}</p></div>`;}
+  h+=`</div></div></div><div class="card"><div class="card-header"><p class="card-title">🗓 Tuần này</p></div><div class="card-content"><p style="font-size:14px;color:var(--muted);margin:0;">Bạn đã duy trì streak ${streak} ngày liên tiếp. Tiếp tục phát huy để mở khoá phần thưởng mới!</p></div></div>`;
+  document.getElementById('tab-stats').innerHTML=h;
+}
+
+function renderHeader(){document.getElementById('streak-value').textContent=`${state.streak} ngày`;document.getElementById('xp-value').textContent=`${state.xp} XP`;}
+function renderTabsVisibility(){document.querySelectorAll('.tab-trigger').forEach(b=>b.classList.toggle('active',b.dataset.tab===state.activeTab));['today','focus','stats'].forEach(t=>{document.getElementById(`tab-${t}`).style.display=state.activeTab===t?'':'none';});}
+function renderDialog(){const el=document.getElementById('break-dialog');if(state.breakNudgeOpen){el.classList.remove('hidden');document.getElementById('break-dialog-desc').textContent=`Bạn đã nghỉ hơi lâu rồi đó! Streak 🔥 ${state.streak} ngày của bạn đang chờ — chỉ cần 1 Pomodoro nữa thôi, bạn quay lại được không?`;}else{el.classList.add('hidden');}}
+
+function render(){renderHeader();renderToday();renderFocus();renderStats();renderTabsVisibility();renderDialog();}
+</script>
+</body>
+</html>
